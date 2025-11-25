@@ -80,30 +80,15 @@
   import { Sender, Bubble } from 'ant-design-x-vue'
   import { ref, onMounted } from 'vue'
   import { chatAPI, createSessionAPI } from '../services/chat'
+  import { useSessionStore } from '../stores/sessions'
 
   defineOptions({ name: 'AXSenderHeaderSetup' })
 
+  const store = useSessionStore()
   const { token } = theme.useToken()
   const [message, contextHolder] = messageAnt.useMessage()
   // 对话上下文列表
-  const context = ref([
-    {
-      role: 'user',
-      content: '你好，我是用户'
-    },
-    {
-      role: 'ai',
-      content: '你好，我是AI助手' 
-    },
-    {
-      role: 'user',
-      content: '你好，我是用户'
-    },
-    {
-      role: 'ai',
-      content: '你好，我是AI助手' 
-    }
-  ])
+  const context = ref([])
   // 是否处于生成中，若是则禁用发送按钮
   const isGen = ref(false)
   // 输入框的key，用于触发重新渲染
@@ -119,28 +104,40 @@
     open.value = !open.value
   }
 
-  const senderSubmit = (e) => {
-    message.success('Send message successfully!')
+  // 提交对话信息
+  const senderSubmit = async (e) => {
+    // 如果当前会话为空，则创建新会话
+    if (context.value.length === 0) {
+      await createSession()
+    }
     context.value.push({ role: 'user', content: e })
     isGen.value = true
-    // 问答请求
-    const res = chatAPI(e)
     // 直接更换 key，刷新整个组件，触发重新渲染
     senderKey.value++
-    setTimeout(() => {
-      isGen.value = false
-    }, 3000)
+    // 问答请求
+    console.log("sessionId: ", store.sessions[0])
+    const res = await chatAPI(e, store.sessions[0])
+    if (res.code === 200) {
+      context.value.push({ role: 'ai', content: res.data.data })
+    } else {
+      message.error('发生错误！')
+    }
+    isGen.value = false
     return ''
+  }
+
+  // 进入页面时创建对话并保存 sessionId
+  const createSession = async () => {
+    const res = await createSessionAPI()
+    console.log("create session result: ", res)
+    if (res.code === 200) {
+      store.addSession(res.data.data)
+    }
   }
 
   const selectFileClick = () => {
     message.info('Mock select file')
   }
-
-  onMounted(() => {
-    // 创建会话
-    createSessionAPI()
-  })
 </script>
 
 <style scoped>
