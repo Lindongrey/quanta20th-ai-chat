@@ -14,19 +14,19 @@ app.use(router)
 
 app.mount('#app')
 
-if (process.env.NODE_ENV === 'development') {
-  worker.start({
-    serviceWorker: {
-      url: '/mockServiceWorker.js',
-      options: {
-        // 明确指定作用域，确保覆盖所有路由
-        scope: '/'
-      }
-    },
-    onUnhandledRequest: 'bypass',
-    // 可选：打印更多日志
-    quiet: false
-  }).then(() => {
-    console.log('MSW 启动成功！')
-  })
-}
+// if (process.env.NODE_ENV === 'development') {
+//   worker.start({
+//     serviceWorker: {
+//       url: '/mockServiceWorker.js',
+//       options: {
+//         // 明确指定作用域，确保覆盖所有路由
+//         scope: '/'
+//       }
+//     },
+//     onUnhandledRequest: 'bypass',
+//     // 可选：打印更多日志
+//     quiet: false
+//   }).then(() => {
+//     console.log('MSW 启动成功！')
+//   })
+// }

@@ -79,7 +79,7 @@
   import { Button, Flex, theme, Typography, List, message as messageAnt } from 'ant-design-vue'
   import { Sender, Bubble } from 'ant-design-x-vue'
   import { ref, onMounted } from 'vue'
-  import { chatAPI, createSessionAPI } from '../services/chat'
+  import { chatAPI, createSessionAPI, testAPI } from '../services/chat'
   import { useSessionStore } from '../stores/sessions'
 
   defineOptions({ name: 'AXSenderHeaderSetup' })
@@ -117,8 +117,9 @@
     // 问答请求
     console.log("sessionId: ", store.sessions[0])
     const res = await chatAPI(e, store.sessions[0])
+    console.log("chat result: ", res)
     if (res.code === 200) {
-      context.value.push({ role: 'ai', content: res.data.data })
+      context.value.push({ role: 'ai', content: res.data })
     } else {
       message.error('发生错误！')
     }
@@ -131,7 +132,7 @@
     const res = await createSessionAPI()
     console.log("create session result: ", res)
     if (res.code === 200) {
-      store.addSession(res.data.data)
+      store.addSession(res.data)
     }
   }
 

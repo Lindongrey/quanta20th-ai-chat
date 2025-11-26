@@ -6,7 +6,8 @@ const [message] = messageAnt.useMessage()
 
 /* 1. 创建实例 */
 const request = axios.create({
-  baseURL: 'http://localhost:8988', // 放在 .env 里：/api
+  // baseURL: 'http://localhost:8100', // 放在 .env 里：/api
+  baseURL: '',  // 配置了代理，不能使用绝对路径，否则会被代理拦截
   timeout: 10000
 })
 
@@ -15,10 +16,17 @@ request.interceptors.request.use(
   config => {
     // 携带 token（如果有）
     const token = localStorage.getItem('token')
-    if (token) config.headers.Authorization = `Bearer ${token}`
+    if (token) config.headers.Authorization = `${token}`
 
-    if (config.data && typeof config.data === 'object') {
-      config.headers['Content-Type'] = 'application/json; charset=utf-8'
+    // 对于 POST/PUT/PATCH 请求，确保有合适的 Content-Type
+    if (['POST', 'PUT', 'PATCH'].includes(config.method?.toUpperCase())) {
+      if (!config.headers['Content-Type']) {
+        config.headers['Content-Type'] = 'application/json; charset=utf-8'
+      }
+      // 确保数据是对象格式
+      if (config.data === null || config.data === undefined) {
+        config.data = {}
+      }
     }
 
     return config
