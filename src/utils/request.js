@@ -8,7 +8,7 @@ const [message] = messageAnt.useMessage()
 const request = axios.create({
   // baseURL: 'http://localhost:8100', // 放在 .env 里：/api
   baseURL: '',  // 配置了代理，不能使用绝对路径，否则会被代理拦截
-  timeout: 10000
+  timeout: 30000
 })
 
 /* 2. 请求拦截器 */
@@ -18,8 +18,12 @@ request.interceptors.request.use(
     const token = localStorage.getItem('token')
     if (token) config.headers.Authorization = `${token}`
 
-    // 对于 POST/PUT/PATCH 请求，确保有合适的 Content-Type
-    if (['POST', 'PUT', 'PATCH'].includes(config.method?.toUpperCase())) {
+    // 如果是 FormData，不设置 Content-Type，让浏览器自动设置
+    if (config.data instanceof FormData) {
+      // 对于 FormData，让浏览器自动设置 Content-Type 和 boundary
+      delete config.headers['Content-Type']
+    } else if (['POST', 'PUT', 'PATCH'].includes(config.method?.toUpperCase())) {
+      // 对于普通 JSON 数据，设置 Content-Type
       if (!config.headers['Content-Type']) {
         config.headers['Content-Type'] = 'application/json; charset=utf-8'
       }

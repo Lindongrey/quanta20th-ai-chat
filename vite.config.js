@@ -28,6 +28,7 @@ export default defineConfig({
     },
   },
   server: {
+    port: 8101,
     proxy: {
       '/api': {
         target: 'http://localhost:8100', // Spring Boot后端地址
