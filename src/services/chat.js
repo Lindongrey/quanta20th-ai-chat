@@ -46,3 +46,8 @@ export const uploadMultipleFilesAPI = (fileList, sessionId) => {
 export const getSessionListAPI = () => {
   return request('/api/ai/list-sessions', 'POST', {})
 }
+
+// 获取会话详情
+export const getSessionDetailAPI = (sessionId) => {
+  return request('/api/ai/old-session', 'POST', {}, { params: { sessionId } })
+}

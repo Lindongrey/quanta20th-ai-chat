@@ -17,8 +17,8 @@ export const useSessionStore = defineStore('session', () => {
     sessions.value = []
   }
 
-  // 当前正在用的 session（ Getter ）
-  const currentSession = computed(() => sessions.value[0] || null)
+  // 当前正在用的 session
+  const currentSession = ref(null)
 
   return { sessions, hasSession, addSession, removeSession, clearSessions, currentSession }
 }, {

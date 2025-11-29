@@ -1,5 +1,5 @@
 <template>
-  <context-holder />
+  <!-- <context-holder /> -->
   <Flex
     style="height: 90vh;"
     justify="end"
@@ -11,7 +11,7 @@
         :key="index"
         class="bubble-item">
         <Bubble
-          :typing="true"
+          :typing="item.isTyping"
           :content=item.content
           :placement="item.role === 'user' ? 'end' : 'start'"
           :messageRender="renderMarkdown"
@@ -73,10 +73,10 @@
 
 <script setup>
   import { CloudUploadOutlined, LinkOutlined } from '@ant-design/icons-vue'
-  import { Button, Flex, theme, Typography, List, UploadDragger, message as messageAnt } from 'ant-design-vue'
+  import { Button, Flex, theme, Typography, List, UploadDragger, message } from 'ant-design-vue'
   import { Sender, Bubble } from 'ant-design-x-vue'
-  import { ref, onMounted, h } from 'vue'
-  import { chatAPI, createSessionAPI, uploadFileAPI, uploadMultipleFilesAPI } from '../services/chat'
+  import { ref, onMounted, h, computed, watch } from 'vue'
+  import { chatAPI, createSessionAPI, uploadFileAPI, uploadMultipleFilesAPI, getSessionDetailAPI } from '../services/chat'
   import { useSessionStore } from '../stores/sessions'
   import markdownit from 'markdown-it'
 
@@ -84,9 +84,8 @@
 
   const store = useSessionStore()
   const { token } = theme.useToken()
-  const [message, contextHolder] = messageAnt.useMessage()
-  // 当前对话的 sessionId
-  const currentSessionId = ref()
+  // 对话气泡是否处于打字状态，如果不是新会话则不打字
+  const isTyping = ref(true)
   // 对话上下文列表
   const context = ref([])
   // 是否处于生成中，若是则禁用发送按钮
@@ -97,6 +96,17 @@
   const fileList = ref([])
   // 是否打开文件上传弹窗
   const open = ref(false)
+  // 当前会话 id
+  const currentSession = computed(() => store.currentSession)
+
+  // 监听 pinia 的当前会话 id 变化
+  watch(currentSession, async (newValue, oldValue) => {
+    const res = await getSessionDetailAPI(newValue)
+    console.log(res)
+    context.value = res.data.map((item) => {
+      return { role: item.role, content: item.content, isTyping: false }
+    })
+  })
 
   const openChange = (v) => {
     open.value = v
@@ -129,9 +139,10 @@
   const senderSubmit = async (e) => {
     // 如果当前会话为空，则创建新会话
     if (context.value.length === 0) {
-      await createSession()
+      const res = await createSession()
+      store.currentSession = res.data
     }
-    context.value.push({ role: 'user', content: e })
+    context.value.push({ role: 'user', content: e, isTyping: true })
     isGen.value = true
     // 直接更换 key，刷新整个组件，触发重新渲染，清空对话框
     senderKey.value++
@@ -167,7 +178,7 @@
     return ''
   }
 
-  // 进入页面时创建对话并保存 sessionId
+  // 对话为空时创建对话并保存 sessionId
   const createSession = async () => {
     const res = await createSessionAPI()
     console.log("create session result: ", res)
@@ -175,6 +186,8 @@
       store.addSession(res.data)
     }
   }
+
+  // 会话变更时获取对话详情
 </script>
 
 <style scoped>
